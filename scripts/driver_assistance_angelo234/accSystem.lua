@@ -22,6 +22,9 @@ local following_time = 1
 
 local following_mode = false
 
+local distance_to_front_vehicle = 9999
+local has_vehicle_ahead = false
+
 local function onToggled(acc_on)
   if acc_on then
     local display_speed = target_speed
@@ -51,6 +54,7 @@ local function onToggled(acc_on)
 
     veh:queueLuaCommand("electrics.values.throttleOverride = nil")
     veh:queueLuaCommand("electrics.values.brakeOverride = nil")
+    veh:queueLuaCommand("electrics.values.accTargetSpeed = nil")
 
     ramped_target_speed = 0
 
@@ -282,6 +286,15 @@ local function update(dt, veh, system_params, aeb_params, front_sensor_data)
     --to the vehicle that I'm planning to collide with
     distance, other_veh_vel = getVehicleAheadInLane(dt, veh_props, front_sensor_data[3])
   end
+
+  --Send ACC data to vehicle electrics
+  distance_to_front_vehicle = distance
+  has_vehicle_ahead = distance < 50
+
+  veh:queueLuaCommand("electrics.values.accTargetSpeed = " .. target_speed)
+  veh:queueLuaCommand("electrics.values.accFollowingTime = " .. following_time)
+  veh:queueLuaCommand("electrics.values.accHasVehicleAhead = " .. (has_vehicle_ahead and "1" or "0"))
+  veh:queueLuaCommand("electrics.values.accDistanceToFront = " .. distance_to_front_vehicle)
 
   --5 meter of leeway
   local following_distance = math.max(veh_props.speed * following_time, 5)
