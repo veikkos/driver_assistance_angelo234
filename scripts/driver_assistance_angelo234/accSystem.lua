@@ -294,7 +294,6 @@ local function update(dt, veh, system_params, aeb_params, front_sensor_data)
   veh:queueLuaCommand("electrics.values.accTargetSpeed = " .. target_speed)
   veh:queueLuaCommand("electrics.values.accFollowingTime = " .. following_time)
   veh:queueLuaCommand("electrics.values.accHasVehicleAhead = " .. (has_vehicle_ahead and "1" or "0"))
-  veh:queueLuaCommand("electrics.values.accDistanceToFront = " .. distance_to_front_vehicle)
 
   --5 meter of leeway
   local following_distance = math.max(veh_props.speed * following_time, 5)

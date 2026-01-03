@@ -159,7 +159,7 @@ end
 
 local beeper_timer = 0
 
-local function soundBeepers(dt, time_before_braking, vel_rel, beeper_params)
+local function soundBeepers(veh, dt, time_before_braking, vel_rel, beeper_params)
   beeper_timer = beeper_timer + dt
 
   --Sound warning tone before braking
@@ -169,6 +169,9 @@ local function soundBeepers(dt, time_before_braking, vel_rel, beeper_params)
       Engine.Audio.playOnce('AudioGui','art/sound/proximity_tone_50ms_loud.wav')
       beeper_timer = 0
     end
+    veh:queueLuaCommand("electrics.values.collisionWarning = 1")
+  else
+    veh:queueLuaCommand("electrics.values.collisionWarning = 0")
   end
 end
 
@@ -180,6 +183,7 @@ local function performEmergencyBraking(dt, veh, aeb_params, time_before_braking,
     if system_state == "braking" then
       veh:queueLuaCommand("electrics.values.brakeOverride = nil")
       veh:queueLuaCommand("electrics.values.throttleOverride = nil")
+      veh:queueLuaCommand("electrics.values.collisionWarning = 0")
       system_state = "ready"
     end
     return
@@ -214,6 +218,7 @@ local function performEmergencyBraking(dt, veh, aeb_params, time_before_braking,
       if system_state == "braking" then
         veh:queueLuaCommand("electrics.values.brakeOverride = nil")
         veh:queueLuaCommand("electrics.values.throttleOverride = nil")
+        veh:queueLuaCommand("electrics.values.collisionWarning = 0")
 
         system_state = "ready"
       end
@@ -243,10 +248,12 @@ local function holdBrakes(veh, veh_props, aeb_params)
       --When coming to a stop with system activated, release brakes but apply parking brake in arcade mode :P
       if gearbox_mode_angelo234.previousGearboxBehavior == "realistic" then
         veh:queueLuaCommand("electrics.values.brakeOverride = 1")
+        veh:queueLuaCommand("electrics.values.collisionWarning = 0")
       else
         --Release brake and apply parking brake
         veh:queueLuaCommand("electrics.values.brakeOverride = nil")
         veh:queueLuaCommand("input.event('parkingbrake', 1, 2)")
+        veh:queueLuaCommand("electrics.values.collisionWarning = 0")
       end
       veh:queueLuaCommand("electrics.values.throttleOverride = nil")
 
@@ -285,6 +292,7 @@ local function update(dt, veh, system_params, aeb_params, beeper_params, front_s
     if system_state ~= "ready" then
       veh:queueLuaCommand("electrics.values.brakeOverride = nil")
       veh:queueLuaCommand("electrics.values.throttleOverride = nil")
+      veh:queueLuaCommand("electrics.values.collisionWarning = 0")
       system_state = "ready"
     end
     return
@@ -334,7 +342,7 @@ local function update(dt, veh, system_params, aeb_params, beeper_params, front_s
   if extra_utils.getPart("forward_collision_warning_angelo234") then
     --At low speeds don't sound beepers
     if veh_props.speed > 11.11 then
-      soundBeepers(dt, time_before_braking, vel_rel, beeper_params)
+      soundBeepers(veh, dt, time_before_braking, vel_rel, beeper_params)
     end
   end
 end
